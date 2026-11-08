@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Large-file Downloads (Motrix)",
+    "description": "Multi-connection, resumable large-file downloads through the local Motrix engine: HTTP/FTP links, magnet links and .torrent files, with progress, pause, resume and cleanup."
+  }
+}

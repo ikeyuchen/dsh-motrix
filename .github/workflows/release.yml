@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 建 GitHub Release
+      id-token: write # npm provenance
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - run: npm ci
+
+      # 发布前跑完整套件：契约 + 发布边界（tarball 必需文件、开发期文件不进包）。
+      - name: Run test suite
+        run: npm test
+
+      # tag 与 package.json 版本必须一致，避免「打了 v0.0.2 却发 0.0.1」
+      - name: Version matches tag
+        run: |
+          node -e "
+          const p = require('./package.json');
+          const tag = process.env.GITHUB_REF_NAME.replace(/^v/, '');
+          if (p.version !== tag) { console.error('tag ' + tag + ' ≠ package.json ' + p.version); process.exit(1); }
+          console.log('✓ version ' + p.version + ' matches tag');
+          "
+
+      - name: Publish
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # npm 发布成功后再建 Release：标题用 tag，正文自动汇总本次提交。
+      # 先 view 再 create，workflow 重跑时不会因「Release 已存在」失败。
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes

@@ -1,0 +1,31 @@
+name: 功能建议
+description: 新的 action、参数、下载能力或体验改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        这个插件只暴露一个模型可见的 `motrix` 网关工具，新增参数会进入每次请求的常驻
+        token 预算（当前上限 tokA 460）。请在描述里说明为什么现有参数做不到。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想解决的问题
+      description: 现在的行为哪里不够用？给出具体场景，而不只是「希望支持 X」。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议的方案
+      description: 期望的 action / 参数 / 行为；能复用现有参数的话也请说明。
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 试过的替代方案
+      description: 例如手动跑 `motrix` CLI、用 shell 下载器，以及为什么不够。
+    validations:
+      required: false

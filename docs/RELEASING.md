@@ -1,0 +1,86 @@
+# 发布流程
+
+## 版本策略（0.0.x 起步）
+
+对外首发定为 **0.0.1**：工具名、参数、枚举值都是模型与用户看到的契约，还会变。
+
+| 变更 | 版本位 | 例子 |
+|---|---|---|
+| 修 bug、改文档、改文案 | **0.0.x**（patch） | 修正停滞检测的提示；压缩参数说明 |
+| **任何模型可见契约变化** | **0.x.0**（minor） | 加/改名工具、加减参数、改枚举 |
+| 契约稳定后 | 1.0.0 | — |
+
+一条容易误判：**工具描述与参数说明占常驻 token**，只改文案不算契约变更，但改完要跑
+`npm run release:check` 确认没爆预算（当前预算 tokA ≤ 460）。
+
+## 发布前检查
+
+静态项已自动化（`prepublishOnly` 先跑 `npm run release:check`）：包元数据齐全、`files` 清单里的
+文件都在、组合包行与包名一致、locale 有标题、CHANGELOG 最新小节版本与 `package.json` 一致、
+常驻 token 在预算内、无旧包名与本机盘符残留。
+
+动态项必须另跑：
+
+```bash
+npm test            # 离线契约测试 + 发布边界测试（tarball 里该有的都有、开发期文件不进包）
+npm run tokens      # 模型可见 token 报表，改工具文案前后对比
+npm run selftest    # 集成自测：需本机 Motrix 在跑，会真实下载到临时目录
+npm pack --dry-run  # 看最终会进包的文件
+```
+
+人工项（机器判不了）：新参数在 `README.md` 的配置表里有位置；`AGENTS.md` 的硬规则没与现状矛盾；
+在桌面插件页 → 添加组合包 → target 指向本仓库根目录装一次冒烟；首发确认 npm 上 `dsh-motrix`
+未被占用（2026-11-08 查过：0 个同名包与近义变体）。
+
+## 首次发布到 GitHub
+
+仓库地址是 `https://github.com/ikeyuchen/dsh-motrix`（public）。空仓库建好后，本地补远端并推送：
+
+```bash
+git remote add origin https://github.com/ikeyuchen/dsh-motrix.git
+git push -u origin main
+```
+
+用 `gh` 时一条命令等价：`gh repo create ikeyuchen/dsh-motrix --public --source=. --remote=origin --push`。
+
+仓库设置（网页或 `gh repo edit`，不落仓库文件）：
+
+- Description：`DSH 插件：用本地 Motrix 引擎多线程、断点续传下载大文件（HTTP/FTP/磁力/.torrent）`
+- Topics：`dsh` `dsh-plugin` `deepseek-harness` `cordis` `motrix` `download` `downloader` `aria2` `bittorrent` `magnet`
+- Settings → Secrets and variables → Actions → `NPM_TOKEN`（Granular token，`read-write`，只限本包）
+- Settings → Branches → 保护 `main`：合并前要求 CI 的 3 个检查全部通过
+  （windows / ubuntu × Node 22，ubuntu × Node 24；单人仓库也建议开，防止本地漏跑测试就推送）
+
+`release.yml` 在 tag 推送后自动建 GitHub Release（标题为 tag，正文是提交摘要）。想用 CHANGELOG
+正文覆盖，发布后执行：`gh release edit v0.0.1 --notes-file <摘出的 CHANGELOG 小节>`。
+
+## 发布
+
+首次发布先完成上一节的推送，确保 `origin/main` 存在，否则下面的 `git reset --soft origin/main`
+会失败。
+
+```bash
+# 1) 写 CHANGELOG：当前版本 + 日期，只写用户可见的新增 / 优化 / 修复
+# 2) 合成本地未推送的提交（一次推送只推一个提交）
+git reset --soft origin/main
+git add -A && git commit -m "chore(release): v0.0.1"
+# 3) 打 tag 推送
+git tag v0.0.1
+git push origin main --tags
+```
+
+`.github/workflows/release.yml` 在 tag 推送后自动：`npm ci` → `npm test` → 校验 tag
+（去掉 `v`）等于 `package.json.version` → `npm publish --access public --provenance` →
+建 GitHub Release。
+
+一次性配置：仓库 Settings → Secrets and variables → Actions 添加 `NPM_TOKEN`
+（npm 网站 → Access Tokens → Granular，权限 `read-write`，仅限本包）。`--provenance` 要求
+workflow 有 `id-token: write` 权限（已在 `release.yml` 声明）。
+
+本地手动发布（CI 不可用时）：`npm login` 后 `npm publish --access public --otp=<6 位码>`。
+
+## 回滚
+
+npm 不允许删除已发布的版本（72 小时内可 unpublish，之后只能 deprecate）。线上问题发新的
+patch 版本，不要依赖撤回；确需标记废弃用
+`npm deprecate dsh-motrix@0.0.2 "contains a regression in the download wait loop; use 0.0.1 or 0.0.3"`。

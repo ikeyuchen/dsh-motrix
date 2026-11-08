@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 安装、配置与行为说明
+    url: https://github.com/ikeyuchen/dsh-motrix#readme
+    about: 先看 README 的配置表与行为要点，多数问题在这里能找到答案。
+  - name: 安全漏洞
+    url: https://github.com/ikeyuchen/dsh-motrix/security/advisories/new
+    about: 请不要用公开 issue 报告漏洞，走私密通道。

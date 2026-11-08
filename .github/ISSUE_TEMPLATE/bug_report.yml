@@ -1,0 +1,51 @@
+name: Bug 报告
+description: 下载、任务管理或下载守卫的行为不符合预期
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        先跑一遍离线检查，能排掉一大半环境问题：`npm test`、`npm run release:check`。
+        涉及安全的问题请按 [SECURITY.md](https://github.com/ikeyuchen/dsh-motrix/blob/main/SECURITY.md) 走私密通道，不要贴在这里。
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么
+      description: 实际行为与期望行为；如果工具返回了可读文本，原样贴出来。
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 从安装方式开始写；涉及模型调用时贴出工具参数（隐去本地路径与 token）。
+      placeholder: |
+        1. 安装方式（插件页添加组合包 / dsh plugin add）：
+        2. 调用的 action 与参数：
+        3. 预期 / 实际：
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: 版本
+      description: 插件版本、DSH 版本、Node 版本、Motrix 与 @motrix/cli 版本
+      placeholder: dsh-motrix 0.0.1 / DSH x.y.z / Node 22.19.0 / Motrix 1.8.19
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统
+      placeholder: Windows 11 / macOS 15 / Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 输出
+      description: 工具返回文本或 `motrix` CLI 的错误输出；注意隐去个人信息与 token。
+      render: text
+    validations:
+      required: false

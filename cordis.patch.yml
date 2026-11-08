@@ -1,0 +1,12 @@
+# dsh-motrix — Motrix 大文件下载工具
+#
+# 向 Web 组合插入一个宿主插件（tool-motrix），注册模型可见的网关工具
+# motrix（action=download|tasks|manage），并在系统提示中注入使用指引。
+# 工具通过本机已安装的 @motrix/cli 驱动正在运行的 Motrix 桌面应用
+# 完成实际下载（多线程、断点续传）。
+#
+# 前置：Motrix 桌面应用 + `npm install -g @motrix/cli@latest`。
+
+- insert:
+    - id: tool-motrix
+      name: 'dsh-motrix'

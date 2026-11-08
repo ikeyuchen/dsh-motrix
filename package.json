@@ -1,0 +1,78 @@
+{
+  "name": "dsh-motrix",
+  "version": "0.0.1",
+  "description": "把本地 Motrix 下载引擎接入 DeepSeek Harness：一个 motrix 网关工具，多线程、断点续传地下载 HTTP/FTP 链接、磁力链与 .torrent，传输在 Motrix 内进行，工具超时或会话中断都不会打断已开始的下载。",
+  "license": "MIT",
+  "author": "ikeyuchen (https://github.com/ikeyuchen)",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "icon": "./icon.svg",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ikeyuchen/dsh-motrix.git"
+  },
+  "homepage": "https://github.com/ikeyuchen/dsh-motrix#readme",
+  "bugs": {
+    "url": "https://github.com/ikeyuchen/dsh-motrix/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "motrix",
+    "download",
+    "downloader",
+    "aria2",
+    "bittorrent",
+    "magnet"
+  ],
+  "files": [
+    "lib/",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale/*.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "test:spec": "node --test --test-reporter=spec test/",
+    "check": "node --test test/",
+    "tokens": "node scripts/token-report.mjs",
+    "pack:dry": "npm pack --dry-run",
+    "selftest": "node scripts/selftest.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "prepublishOnly": "npm run release:check && npm test",
+    "test:pack": "node --test test/pack.test.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.2.0-rc.2 <0.3.0",
+    "@deepseek-ai/schemastery": "~3.18.4"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2",
+    "@deepseek-ai/schemastery": "~3.18.4"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.0-rc.2 <0.3.0"
+  }
+}
