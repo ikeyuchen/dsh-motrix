@@ -29,8 +29,8 @@ npm pack --dry-run  # 看最终会进包的文件
 ```
 
 人工项（机器判不了）：新参数在 `README.md` 的配置表里有位置；`AGENTS.md` 的硬规则没与现状矛盾；
-在桌面插件页 → 添加组合包 → target 指向本仓库根目录装一次冒烟；首发确认 npm 上 `dsh-motrix`
-未被占用（2026-11-08 查过：0 个同名包与近义变体）。
+从 npm 装一次冒烟（插件页输入 `dsh-motrix` 或 `dsh plugin add dsh-motrix`）；首发确认 npm 上
+`dsh-motrix` 未被占用（2026-11-08 查过：0 个同名包与近义变体）。
 
 ## 首次发布到 GitHub
 

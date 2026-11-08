@@ -37,18 +37,28 @@
 
 ## 安装
 
-在 DSH 桌面版「插件页 → 添加组合包」里选择本仓库目录（绝对路径），安装后启用 `tool-motrix`
-一行即可；npm 发布后也可 `dsh plugin add dsh-motrix`。组合包声明在 `cordis.patch.yml`，
-依赖按官方规范以 peer 形式声明，不需要构建步骤。
+**方式一：DSH 内安装（推荐）**
 
-从源码检出安装的话，装完可以自查：
+1. DSH →「插件」→「添加插件」
+2. 输入包名 `dsh-motrix`，安装源保持「npm 官方源」
+3. 点「安装」，装好后启用 `tool-motrix` 一行
+
+**方式二：命令行（同样走 npm）**
 
 ```bash
-npm test            # 离线契约测试 + 发布边界
-npm run tokens      # 模型可见 token
+dsh plugin add dsh-motrix
 ```
 
-`scripts/` 与 `test/` 不在 npm 包里；用 `dsh plugin add dsh-motrix` 安装的用户不需要跑这两个命令。
+**方式三：源码**（本地开发或未发布版本）
+
+```bash
+git clone https://github.com/ikeyuchen/dsh-motrix.git
+dsh plugin --profile web add ./dsh-motrix
+```
+
+组合包声明在 `cordis.patch.yml`，依赖按 peer 形式声明，不需要构建步骤。镜像源（npmmirror）同步
+有延迟，装到的可能不是最新版，用 `npm ls dsh-motrix` 核对。源码方式装完可跑 `npm test` /
+`npm run tokens` 自查；npm 包里不含 `scripts/`、`test/`。
 
 ## 配置
 
