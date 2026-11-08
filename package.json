@@ -53,9 +53,9 @@
     }
   },
   "scripts": {
-    "test": "node --test test/",
-    "test:spec": "node --test --test-reporter=spec test/",
-    "check": "node --test test/",
+    "test": "node --test test/*.test.mjs",
+    "test:spec": "node --test --test-reporter=spec test/*.test.mjs",
+    "check": "node --test test/*.test.mjs",
     "tokens": "node scripts/token-report.mjs",
     "pack:dry": "npm pack --dry-run",
     "selftest": "node scripts/selftest.mjs",
