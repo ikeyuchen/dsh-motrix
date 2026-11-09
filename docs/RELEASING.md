@@ -32,14 +32,8 @@ git tag v<version> && git push origin main --tags
 locale 元数据、CHANGELOG 与 README 版本、token 预算、单工具、无运行时 `dependencies`、无旧包名与
 本机盘符残留。
 
-动态项在本地执行：
-
-```bash
-npm test            # 契约测试 + tarball 发布边界
-npm run tokens      # 模型可见 token 报表
-npm run selftest    # 集成自测：需本机 Motrix，会真实下载到临时目录
-npm pack --dry-run  # 核对进包文件
-```
+动态项按 `AGENTS.md`「命令」在本地执行：`npm test`、`npm run tokens`、`npm run selftest`、
+`npm pack --dry-run`。
 
 发布前确认目标版本未发布：`npm view dsh-motrix@<version>` 应返回 404。
 

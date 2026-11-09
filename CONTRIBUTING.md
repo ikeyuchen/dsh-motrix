@@ -10,12 +10,10 @@
 
 ```bash
 npm install
-npm test            # 离线契约测试 + tarball 发布边界
-npm run tokens      # 模型可见 token 报表
-npm run release:check
 ```
 
-命令与约束以 `AGENTS.md` 为准。集成自测 `npm run selftest` 依赖真实后端，因此不进 CI。
+命令清单与作用见 `AGENTS.md`「命令」。提交前至少运行 `npm test` 与 `npm run release:check`；
+改动工具文案时加跑 `npm run tokens`。集成自测 `npm run selftest` 依赖真实后端，因此不进 CI。
 
 ## 提交与 PR
 
