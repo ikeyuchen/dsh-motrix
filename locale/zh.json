@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "大文件下载（Motrix）",
-    "description": "用本地 Motrix 引擎多线程、断点续传地下载大文件：HTTP/FTP 链接、磁力链与 .torrent 种子；可查进度、暂停、续传与清理任务。"
+    "title": "Motrix 下载",
+    "description": "通过本机 Motrix 下载 HTTP/FTP、磁力与 .torrent：多线程、断点续传，传输不随工具调用中断。需安装 Motrix 桌面应用与 @motrix/cli。"
   }
 }

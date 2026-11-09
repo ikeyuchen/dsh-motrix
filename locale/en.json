@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Large-file Downloads (Motrix)",
-    "description": "Multi-connection, resumable large-file downloads through the local Motrix engine: HTTP/FTP links, magnet links and .torrent files, with progress, pause, resume and cleanup."
+    "title": "Motrix Downloads",
+    "description": "Download HTTP/FTP, magnet links and .torrent files through the local Motrix engine: multi-connection, resumable, and transfers outlive the tool call. Requires the Motrix app and @motrix/cli."
   }
 }

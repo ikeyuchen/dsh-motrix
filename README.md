@@ -5,15 +5,15 @@
 [![node](https://img.shields.io/node/v/dsh-motrix)](https://github.com/ikeyuchen/dsh-motrix/blob/main/package.json)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-把本机 [Motrix](https://motrix.app) 下载引擎接入 DeepSeek Harness（DSH），让 AI 在工作过程中
-**知道并主动使用** Motrix 下载大文件：多线程分块、断点续传、失败自动重试，比 shell 里的
-一次性 `curl` / `Invoke-WebRequest` 更稳，且下载在 Motrix 应用内进行——**工具调用超时或会话
-中断都不会打断已开始的传输**。
+把本机 [Motrix](https://motrix.app) 下载引擎接入 DeepSeek Harness（DSH）：在对话中由 AI 调用
+`motrix` 工具下载大文件，多线程、断点续传；传输在 Motrix 应用内进行，工具超时或会话中断不会
+打断已开始的下载。
 
-单工具插件：一个模型可见的 `motrix` 网关（`action = download | tasks | manage`），外加一条
-系统提示指引；下载守卫在 `tools/pre-execute` 上运行，没有工具也没有提示段，常驻 token 为 0。
+## 插件介绍
 
-## 工具
+一个模型可见的网关工具 `motrix`（`action = download | tasks | manage`），配套一条系统提示与
+内置下载守卫。守卫只在 `tools/pre-execute` 上拦截 shell 里的下载器落盘命令，没有工具与提示段，
+常驻 token 为 0。
 
 | action | 用途 |
 | --- | --- |
@@ -23,42 +23,42 @@
 
 ## 前置条件
 
-1. **Motrix 桌面应用**已安装。桥接不可达时插件会**静默拉起**应用（`--opened-at-login=1`，
-   只建隐藏窗口/托盘，不弹主界面）再重试；可用 `launchHidden: false` 回退到会显示窗口的旧
-   `motrix open`。Linux 不支持静默拉起，会直接回退到 `motrix open`（可能弹出主窗口）。
-2. **Motrix CLI**（Node.js ≥ 22.19，或 ≥ 24）：
+插件依赖本机两个软件，缺一不可：
+
+1. **Motrix 桌面应用**：从 <https://motrix.app> 安装，并至少启动一次。
+2. **@motrix/cli**（Node.js ≥ 22.19 或 ≥ 24）：
 
    ```bash
    npm install -g @motrix/cli@latest
    ```
 
-插件通过 spawn 一次性 `motrix <cmd> --json` 进程调用 CLI（Windows 上解析 npm 的 `motrix.cmd`
-垫片并直接以 node 运行其入口，不经过 shell），因此 URL/请求头等参数不会被二次解释。
+确认 `motrix` 命令可执行、桌面应用正在运行。桥接不可达时插件会尝试静默拉起应用
+（`--opened-at-login=1`，不弹主窗口；`launchHidden: false` 可关闭）；Linux 会回退到
+`motrix open`。需要代理时在 Motrix 应用内设置，或在调用时传 `proxy`（HTTP/SOCKS5）。
 
-## 安装
+## 在 DSH 中使用
 
-**方式一：DSH 内安装（推荐）**
+**安装插件（三选一）**
 
-1. DSH →「插件」→「添加插件」
-2. 输入包名 `dsh-motrix`，安装源保持「npm 官方源」
-3. 点「安装」，装好后启用 `tool-motrix` 一行
+1. DSH →「插件」→「添加插件」→ 输入包名 `dsh-motrix`，安装源保持「npm 官方源」→ 安装 →
+   启用 `tool-motrix`。
+2. 命令行：
 
-**方式二：命令行（同样走 npm）**
+   ```bash
+   dsh plugin add dsh-motrix
+   ```
+3. 源码（开发）：
 
-```bash
-dsh plugin add dsh-motrix
-```
+   ```bash
+   git clone https://github.com/ikeyuchen/dsh-motrix.git
+   dsh plugin --profile web add ./dsh-motrix
+   ```
 
-**方式三：源码**（本地开发或未发布版本）
+安装后无需额外配置。在对话中直接说明需求即可，例如「用 Motrix 下载 <链接> 到 <目录>」，
+模型会调用 `motrix`；任务在 Motrix 应用内可见，也可用 `action=tasks` 查询。
 
-```bash
-git clone https://github.com/ikeyuchen/dsh-motrix.git
-dsh plugin --profile web add ./dsh-motrix
-```
-
-组合包声明在 `cordis.patch.yml`，依赖按 peer 形式声明，不需要构建步骤。镜像源（npmmirror）同步
-有延迟，装到的可能不是最新版，用 `npm ls dsh-motrix` 核对。源码方式装完可跑 `npm test` /
-`npm run tokens` 自查；npm 包里不含 `scripts/`、`test/`。
+镜像源（npmmirror）同步有延迟，可用 `npm ls dsh-motrix` 核对版本。组合包声明在
+`cordis.patch.yml`，依赖以 peer 形式声明，无需构建步骤。
 
 ## 配置
 
@@ -105,19 +105,13 @@ dsh plugin --profile web add ./dsh-motrix
 
 ## 行为要点
 
-- 等待循环把 `completed` / `seeding` / `paused` / `error` 视为已落定；输出经过紧凑投影，不带
-  `bt.trackers` 之类大数组。
-- 失败任务带 `errorCode` / `stage` / `source`，批量下载时能直接看出哪条源挂了。
-- 多 URL 批量下载时单个源失败不影响其余源；失败源会在 `hint` 里列出。
-- `remove` 前核对文件：文件被移走、被改过、是符号链接/目录或大小未知时只删任务记录，
-  并在 `keptReason` 里说明原因。
-- 停滞检测（`stallWindowMs`）在下载中的任务字节数长时间不增长时提前返回并给出处置建议；
-  `fetching_metadata` 与排队中的任务不再拖住判定。
-- 守卫只拦「下载器 + 明确落盘」的组合：按命令段识别（`sudo`/`env`/`timeout` 等包装、
-  多行脚本、绝对路径都算），支持 `curl -o`/`-O`/`-OJ`、`wget` 默认写出、
-  `Invoke-WebRequest`/`iwr -OutFile`、`aria2c`、`Start-BitsTransfer`、`bitsadmin`、
-  `certutil -urlcache`、重定向落盘与大文件后缀 URL；`2>/dev/null`、`curl -I`、
-  `grep aria2c` 这类只读/无关写法，以及 `git clone`、`npm install`、只读查 API 一律放行。
+- 等待循环以 `completed` / `seeding` / `paused` / `error` 为落定；输出经过紧凑投影。
+- 失败任务带 `errorCode` / `stage` / `source`；多 URL 时单个源失败不影响其余源。
+- `remove` 前核对文件（存在、普通文件、非符号链接、大小相符），不符时只删任务记录并给出
+  `keptReason`。
+- 停滞检测在下载任务长时间无字节增长时提前返回；`fetching_metadata` 与排队任务不参与判定。
+- 守卫按命令段识别「下载器 + 落盘证据」（含 `sudo`/`env` 包装、多行脚本、绝对路径、`-OJ`、
+  `wget` 默认写出等），只读命令、`git clone`、`npm install` 放行。
 
 ## 测试与自检
 
@@ -154,14 +148,14 @@ scripts/           token 报表、发布自检、集成自测
 
 ## 版本与发布
 
-当前 **0.0.4-beta.4**（beta 预览；稳定版 0.0.3）。模型可见契约仍会变，版本按 `0.0.x` 递增
+当前 **0.0.4-beta.5**（beta 预览；稳定版 0.0.3）。模型可见契约仍会变，版本按 `0.0.x` 递增
 （工具名/参数/枚举调整同样进 `0.0.x`，不使用 minor 位）。beta 用 `dsh plugin add dsh-motrix@beta`
 安装，`latest` 不会被改动。发布流程见 `docs/RELEASING.md`：
 
 ```bash
 npm run release:check
 npm version prerelease --preid beta --no-git-tag-version   # 稳定版用 patch
-git tag v0.0.4-beta.4 && git push origin main --tags   # release.yml 自动 npm publish
+git tag v0.0.4-beta.5 && git push origin main --tags   # release.yml 自动 npm publish
 ```
 
 ## 参与贡献
