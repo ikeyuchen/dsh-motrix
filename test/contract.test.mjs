@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -115,4 +116,91 @@ test("内置下载守卫：拦截下载器落盘、放行只读命令", () => {
 	assert.equal(ask("read_file", { path: "x.iso" }), null);
 	const off = createGuardState({ guardEnabled: false, guardAllowPatterns: [], guardLargeExtensions: undefined });
 	assert.equal(decideGuard({ name: "bash", arguments: { command: "curl -o x.iso https://e/x.iso" } }, off), null);
+});
+
+test("下载守卫：误拦/漏拦回归", () => {
+	const state = createGuardState({ guardEnabled: true, guardAllowPatterns: [], guardLargeExtensions: undefined });
+	const kind = (name, command) => decideGuard({ name, arguments: { command } }, state)?.kind ?? "allow";
+	// 必须拦截（此前漏拦的写法）
+	for (const command of [
+		"curl -o x.zip https://e.com/x.zip",
+		"curl -O https://e.com/x.zip",
+		"curl -OJ https://e.com/download?id=1",
+		"curl -sLO https://e.com/x.zip",
+		"wget -q https://e.com/bigfile",
+		"wget -Ofoo https://e.com/x.zip",
+		"sudo curl -o x.zip https://e.com/x.zip",
+		"env FOO=1 curl -o x.zip https://e.com/x.zip",
+		"timeout 60 curl -o x.zip https://e.com/x.zip",
+		"xargs curl -O https://e.com/x.zip",
+		"cd /tmp\ncurl -o x.zip https://e.com/x.zip",
+		"/usr/bin/curl -o x.zip https://e.com/x.zip",
+		"./curl -o x.zip https://e.com/x.zip",
+		"iwr https://e.com/x.msi -OutFile x.msi",
+		"bitsadmin /transfer j https://e.com/x.zip C:\\tmp\\x.zip",
+		"certutil -urlcache -split -f https://e.com/x.exe x.exe",
+		"aria2c https://e.com/x.iso"
+	]) {
+		assert.equal(kind("bash", command), "deny", `应拦截: ${command}`);
+	}
+	// 必须放行（此前误拦的写法）
+	for (const command of [
+		"grep -rn aria2c .",
+		"git commit -m 'fix: aria2c cleanup'",
+		"curl https://api.e.com/status",
+		"curl -s https://api.e.com/status 2>/dev/null",
+		"curl -I https://e.com/a.iso",
+		"curl https://e.com/a.zip | tar xz",
+		"git clone https://e.com/x.git",
+		"npm install",
+		"echo hello"
+	]) {
+		assert.equal(kind("bash", command), "allow", `应放行: ${command}`);
+	}
+	// 当前 profile 的 bash 入口是 ops_bash，同样要覆盖
+	assert.equal(kind("ops_bash", "curl -o x.zip https://e.com/x.zip"), "deny");
+});
+
+test("tools/pre-execute 接线：deny 不调用 next，放行才 next", async () => {
+	const { ctx, hooks } = stubCtx();
+	plugin.apply(ctx, plugin.Config({}));
+	const hook = hooks.get("tools/pre-execute");
+	assert.equal(typeof hook, "function");
+	let nextCalls = 0;
+	const next = async () => {
+		nextCalls += 1;
+		return { kind: "allow" };
+	};
+	const denied = await hook({ name: "bash", arguments: { command: "curl -o x.zip https://e.com/x.zip" } }, next);
+	assert.equal(denied?.kind, "deny");
+	assert.equal(nextCalls, 0);
+	const allowed = await hook({ name: "bash", arguments: { command: "curl https://api.e.com/status" } }, next);
+	assert.equal(nextCalls, 1);
+	assert.deepEqual(allowed, { kind: "allow" });
+});
+
+test("删除保护：链接/目录/大小未知时只删任务记录", async () => {
+	const { checkFileForDelete } = await import("../lib/inspect.js");
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dsh-motrix-delete-"));
+	try {
+		const file = path.join(dir, "a.bin");
+		fs.writeFileSync(file, "abc");
+		const task = (over = {}) => ({ status: "completed", finalPath: file, bytesTotal: 3, ...over });
+		assert.deepEqual(await checkFileForDelete(task()), { refuse: false });
+		assert.equal((await checkFileForDelete(task({ bytesTotal: 4 }))).reason, "size-changed");
+		assert.equal((await checkFileForDelete(task({ bytesTotal: undefined }))).reason, "size-unknown");
+		assert.equal((await checkFileForDelete(task({ finalPath: path.join(dir, "missing.bin") }))).reason, "file-missing");
+		assert.equal((await checkFileForDelete(task({ finalPath: dir }))).reason, "not-a-regular-file");
+		assert.equal((await checkFileForDelete(undefined)).reason, "task-not-in-list-window");
+		assert.deepEqual(await checkFileForDelete(task({ status: "downloading" })), { refuse: false });
+		const link = path.join(dir, "link.bin");
+		try {
+			fs.symlinkSync(file, link);
+			assert.equal((await checkFileForDelete(task({ finalPath: link }))).reason, "symlink");
+		} catch {
+			/* Windows 无权限建符号链接时跳过该断言 */
+		}
+	} finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
 });
