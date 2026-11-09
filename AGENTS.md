@@ -87,12 +87,10 @@ npm pack --dry-run    # 看最终会进包的文件
 
 ## 版本与发布
 
-- 版本只沿 `0.0.x` 递增，**不使用 0.x.0 minor 位**；beta 用 `0.0.x-beta.N`（如 `0.0.4-beta.0`）。
-- beta：`npm version prerelease --preid beta --no-git-tag-version` → 同步 README/CHANGELOG → 推 tag
-  `v0.0.x-beta.N`；`release.yml` 自动发 `beta` dist-tag，**`latest` 保持稳定版**。用户装 `dsh-motrix@beta`。
-- 稳定：不带 `-` 的 patch 版本，CI 发 `latest`。**发布只走 tag/CI**，本地手发只在 CI 不可用时兜底。
-- 文档改动也要发版才会上 npm 页面（README 来自已发布 tarball）；README/CHANGELOG 的版本声明由
-  `release:check` 校验，不同步会拦。
+版本策略、beta 与发布流程以 `docs/RELEASING.md` 为准：版本只沿 `0.0.x`；beta 用
+`0.0.x-beta.N` 并发布到 `beta` dist-tag，稳定版发布 `latest`；发布只走 tag/CI。文档改动也要
+发版才会同步到 npm 页面（README 来自已发布 tarball），README/CHANGELOG 版本声明由
+`release:check` 校验。
 
 ## 发版验收（本机，必做）
 
