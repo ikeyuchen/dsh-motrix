@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        先跑一遍离线检查，能排掉一大半环境问题：`npm test`、`npm run release:check`。
+        若从源码安装，先运行 `npm test`、`npm run release:check` 排除环境问题。
         涉及安全的问题请按 [SECURITY.md](https://github.com/ikeyuchen/dsh-motrix/blob/main/SECURITY.md) 走私密通道，不要贴在这里。
   - type: textarea
     id: what-happened
@@ -31,7 +31,7 @@ body:
     attributes:
       label: 版本
       description: 插件版本、DSH 版本、Node 版本、Motrix 与 @motrix/cli 版本
-      placeholder: dsh-motrix 0.0.3 / DSH x.y.z / Node 22.19.0 / Motrix 1.8.19
+      placeholder: dsh-motrix <version> / DSH <version> / Node 22.19.0 / Motrix 1.8.19
     validations:
       required: true
   - type: input

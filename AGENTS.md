@@ -35,6 +35,32 @@ npm pack --dry-run    # 看最终会进包的文件
   不复制其应用图标的具体造型（卡片/凹槽/指示点等）。
 - **版本号只在准备发布时递增**，日常提交不改版本、不写 CHANGELOG。
 
+## AI 生成内容（硬规则）
+
+**唯一可信源**（文档与代码冲突时以代码为准，并回写文档）：
+
+| 内容 | 事实源 |
+|---|---|
+| 工具名 / 参数 / 枚举 / 输出 | `lib/tools.js` 的 `defineTool` |
+| Config 键、默认值、约束 | `lib/index.js` 的 `Config` |
+| 组合包行与包名 | `cordis.patch.yml`、`package.json` |
+| 命令与发布流程 | `package.json` scripts、`docs/RELEASING.md` |
+| 门禁 | `scripts/release-check.mjs`、`test/` |
+
+**禁止项**
+
+- 禁止臆造字段、参数、默认值、枚举、命令、路径或版本号；文档中的每项行为都应能对应到实现。
+- 禁止改动与任务无关的结构、依赖、命名或格式；必要重构单独提交并说明原因。
+- 禁止跳过测试直接宣称完成，或用 `link:` 源代替 npm 源作为用户安装验收。
+- 禁止复制第三方品牌素材（见上方图标约束）。
+
+**审核流程**
+
+- AI 生成的注释、文档、CHANGELOG、locale 文案须逐条对照实现（字段名、默认值、命令、路径）。
+- 提交前跑 `npm test` 与 `npm run release:check`；改工具文案加跑 `npm run tokens`；发版按「发版验收」执行。
+- PR / 提交说明列出执行的验证命令与结果；发布内容由人复核 tarball 与 npm 页面。无法确认的内容
+  标注「待确认」，不得猜测。
+
 ## 容易忘的仓库结构决策
 
 | 决策 | 原因 | 依据 |
@@ -43,7 +69,6 @@ npm pack --dry-run    # 看最终会进包的文件
 | 包名 `dsh-motrix`、行 id `tool-motrix` | 包名是安装标识、行 id 是组合层标识，两者解耦；短前缀与兄弟仓库一致 | `docs/RELEASING.md` |
 | 下载守卫没有工具也没有提示段 | 只在 `tools/pre-execute` 上拦窄口径命令，常驻 token 为 0；自身异常一律 `next()` | `lib/guard.js` |
 | `selftest` 不进 CI | 需要真实 Motrix、CLI 与网络；CI 只跑离线契约与发布边界 | `scripts/selftest.mjs` |
-| 版本 0.0.x 起步 | 工具名、参数、枚举仍是会变的模型可见契约 | `docs/RELEASING.md` |
 
 ## 提交与推送
 
@@ -53,10 +78,12 @@ npm pack --dry-run    # 看最终会进包的文件
 - subject 用中文写清做了什么，不写过程；一次提交只做一件事。
 - 提交身份固定 `ikeyuchen <ikeyuchen@users.noreply.github.com>`（已写入 `git config --local`，换机器要重设）。
 
-**本地小步提交，攒够再推**：不要频繁推送；推前把未推送的提交合成一个：
-`git reset --soft origin/main` 后重提，或 `git rebase -i origin/main`。**不改写已推送的历史**（不 force-push）。
+**本地小步提交，攒够再推**：不要频繁推送；推前把未推送的提交合成一个（发布版本允许 `fix` +
+`release` 两个提交）：`git reset --soft origin/main` 后重提，或 `git rebase -i origin/main`。
+**不改写已推送的历史**（不 force-push）。
 
-**变更写进 CHANGELOG**：只写用户能感知的变化，分区固定 `新增功能 / 体验优化 / 问题修复 / 其他变更`。
+**变更写进 CHANGELOG**：只写用户能感知的变化；分区从 `新增功能 / 体验优化 / 问题修复 / 其他变更`
+中按需使用，不要求每版齐全。
 
 ## 版本与发布
 
@@ -74,6 +101,7 @@ npm pack --dry-run    # 看最终会进包的文件
 - 验收项：`list_bundles` 的 source 是 npm spec、`node_modules/dsh-motrix` 是真实目录且版本一致；
   真实 Motrix 跑一次 `action=tasks`、一次小文件 `action=download`（sha256）、一次 `manage remove deleteFiles`、
   一条守卫拦截。
+- 刚发布完用 `@beta` 可能仍解析到上一版（pnpm `minimumReleaseAge`）；此时用精确版本号安装。
 - GitHub 文档已更新但 npm 页面未跟属于预期；要同步就补一个 beta/patch 发版。
 
 ## 改完的自检顺序
