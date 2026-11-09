@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 256 256" fill="none" role="img" aria-label="Motrix 下载">
   <!-- 下载字形（托盘 + 箭头 + 偏移重影）保持原风格；箭头用 Motrix 紫、托盘用本插件青色，
-       下方写 Motrix 文字点明关联。不复制 Motrix 应用图标的卡片/凹槽等造型。 -->
+       下方写 Motrix 文字点明关联。整体按内容包围盒垂直居中（上下留白相等），不复制 Motrix 应用图标造型。 -->
   <defs>
     <linearGradient id="dsh-motrix-arrow" x1="112" y1="32" x2="168" y2="152" gradientUnits="userSpaceOnUse">
       <stop stop-color="#B794F6"/>
@@ -10,15 +10,15 @@
       <stop stop-color="#22D3EE"/>
       <stop offset="1" stop-color="#0284C7"/>
     </linearGradient>
-    <linearGradient id="dsh-motrix-word" x1="82" y1="214" x2="174" y2="248" gradientUnits="userSpaceOnUse">
+    <linearGradient id="dsh-motrix-word" x1="82" y1="198" x2="174" y2="232" gradientUnits="userSpaceOnUse">
       <stop stop-color="#8B6BE8"/>
       <stop offset="1" stop-color="#5B3FC4"/>
     </linearGradient>
   </defs>
-  <g transform="translate(25.6 21.6) scale(0.8)">
+  <g transform="translate(25.6 7.6) scale(0.8)">
     <g transform="translate(10 10)" opacity="0.32"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40A8,8,0,0,0,168,96H136V32a8,8,0,0,0-16,0V96H88a8,8,0,0,0-5.66,13.66Z" fill="#C4B5FD"/></g>
     <path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Z" fill="url(#dsh-motrix-tray)"/>
     <path d="M122.34,149.66a8,8,0,0,0,11.32,0l40-40A8,8,0,0,0,168,96H136V32a8,8,0,0,0-16,0V96H88a8,8,0,0,0-5.66,13.66Z" fill="url(#dsh-motrix-arrow)"/>
   </g>
-  <text x="128" y="244" text-anchor="middle" font-family="'Segoe UI', system-ui, -apple-system, Roboto, sans-serif" font-size="32" font-weight="700" letter-spacing="0.6" fill="url(#dsh-motrix-word)">Motrix</text>
+  <text x="128" y="228" text-anchor="middle" font-family="'Segoe UI', system-ui, -apple-system, Roboto, sans-serif" font-size="32" font-weight="700" letter-spacing="0.6" fill="url(#dsh-motrix-word)">Motrix</text>
 </svg>
