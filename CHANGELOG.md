@@ -2,6 +2,27 @@
 
 版本号只在准备发布时递增；只记用户可见的改动，实现细节见 `docs/`。
 
+## 0.0.4-beta.0（2026-11-09）
+
+### 问题修复
+
+- 幂等键归一化：`saveDir` 尾斜杠/反斜杠、headers 顺序与大小写、`select` 写法不同不再派生不同 key，
+  超时重试不会重复建任务；重复 URL 自动去重，`added` 不再虚报。
+- `select` 改为严格十进制整数解析（`"0x"`/`"2.9"` 响亮失败），CLI 与桥接两条路径同义。
+- `filename` 禁止路径分隔符与 `..`（不能借桥接写出 `saveDir`）；`saveDir` 必须为绝对路径；
+  `connections` 越界不再静默 clamp 到 1–64，改为响亮失败。
+- 任务名/路径/错误文本压平换行，防止远端文件名伪造模型可见行；`error` 与 `finalPath` 同时存在时
+  两者都保留。
+- 解析不出任务对象时不再返回 `settled: true`（避免首行被读成已完成）。
+- `fmtBytes` 补 1023.x→1024 进位；`noteTasks` 记录状态变化（queued 不再永久 `[stale]`），
+  超 2000 条按最后变化时间淘汰。
+- 发布自检补 README 版本声明校验、tarball 白名单子集断言。
+
+### 其他变更
+
+- 发布链路支持 prerelease：版本号含 `-` 时自动发 `beta` dist-tag，`latest` 保持稳定版；
+  安装 beta 用 `dsh plugin add dsh-motrix@beta`。
+
 ## 0.0.3（2026-11-09）
 
 ### 问题修复

@@ -14,6 +14,20 @@
 一条容易误判：**工具描述与参数说明占常驻 token**，只改文案不算契约变更，但改完要跑
 `npm run release:check` 确认没爆预算（当前预算 tokA ≤ 460）。
 
+## Beta 预发布
+
+要用 npm 先给用户试新版本、又不影响稳定版时发 beta：
+
+```bash
+npm version prerelease --preid beta --no-git-tag-version   # 0.0.3 → 0.0.4-beta.0
+# 同步 README「当前 **x.y.z**」与 CHANGELOG 小节，跑 npm run release:check
+git tag v0.0.4-beta.0 && git push origin main --tags
+```
+
+`release.yml` 检测到版本号含 `-` 会自动 `npm publish --tag beta`，**`latest` 保持稳定版不动**；
+安装 beta 用 `dsh plugin add dsh-motrix@beta`（或 npm `npm i dsh-motrix@beta`）。转正时发不带 `-`
+的稳定版，CI 会把它发回 `latest`；`npm dist-tag ls dsh-motrix` 可核对两个 tag 各指向哪版。
+
 ## 发布前检查
 
 静态项已自动化（`prepublishOnly` 先跑 `npm run release:check`）：包元数据齐全、`files` 清单里的

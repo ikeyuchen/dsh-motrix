@@ -39,9 +39,15 @@ jobs:
           "
 
       - name: Publish
-        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # prerelease（如 0.0.4-beta.0）发到 beta dist-tag，latest 保持不变；
+          # 稳定版照常发 latest。安装 beta：dsh plugin add dsh-motrix@beta
+          npm_tag=latest
+          case "$GITHUB_REF_NAME" in *-*) npm_tag=beta ;; esac
+          echo "publishing with dist-tag: $npm_tag"
+          npm publish --access public --provenance --tag "$npm_tag"
 
       # npm 发布成功后再建 Release：标题用 tag，正文自动汇总本次提交。
       # 先 view 再 create，workflow 重跑时不会因「Release 已存在」失败。

@@ -1,6 +1,6 @@
 {
   "name": "dsh-motrix",
-  "version": "0.0.3",
+  "version": "0.0.4-beta.0",
   "description": "把本地 Motrix 下载引擎接入 DeepSeek Harness：一个 motrix 网关工具，多线程、断点续传地下载 HTTP/FTP 链接、磁力链与 .torrent，传输在 Motrix 内进行，工具超时或会话中断都不会打断已开始的下载。",
   "license": "MIT",
   "author": "ikeyuchen (https://github.com/ikeyuchen)",
