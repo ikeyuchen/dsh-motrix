@@ -89,7 +89,7 @@ dsh plugin --profile web add ./dsh-motrix
 | `addTimeoutMs` | `60000` | `add` 子命令上限 |
 | `pollIntervalMs` | `2000` | 轮询间隔 |
 | `defaultWaitTimeoutMs` | `600000` | `action=download` 默认等待预算 |
-| `downloadToolTimeoutMs` | `960000` | 工具整体上限（须大于等待预算，否则加载即报错） |
+| `downloadToolTimeoutMs` | `960000` | 工具整体上限（须至少比默认等待预算大 30000ms，否则加载即报错） |
 | `listLimit` | `30` | `action=tasks` 默认条数，上限 200 |
 | `maxUrlsPerCall` | `8` | 单次最多 URL 数 |
 | `stallWindowMs` | `60000` | 等待期间判定停滞的时长；0 = 关闭 |
@@ -108,12 +108,16 @@ dsh plugin --profile web add ./dsh-motrix
 - 等待循环把 `completed` / `seeding` / `paused` / `error` 视为已落定；输出经过紧凑投影，不带
   `bt.trackers` 之类大数组。
 - 失败任务带 `errorCode` / `stage` / `source`，批量下载时能直接看出哪条源挂了。
-- `remove` 前核对文件：文件被移走或被改过时只删任务记录，并在 `keptReason` 里说明原因。
-- 停滞检测（`stallWindowMs`）在字节数长时间不增长时提前返回并给出处置建议；
-  `fetching_metadata` 阶段不计入。
-- 守卫只拦「下载器 + 明确落盘」的窄组合（`curl -o`、`wget -O`、`aria2c`、
-  `Invoke-WebRequest -OutFile`、`Start-BitsTransfer`、重定向落盘、大文件后缀 URL）；
-  `git clone`、`npm install`、只读查 API 一律放行。
+- 多 URL 批量下载时单个源失败不影响其余源；失败源会在 `hint` 里列出。
+- `remove` 前核对文件：文件被移走、被改过、是符号链接/目录或大小未知时只删任务记录，
+  并在 `keptReason` 里说明原因。
+- 停滞检测（`stallWindowMs`）在下载中的任务字节数长时间不增长时提前返回并给出处置建议；
+  `fetching_metadata` 与排队中的任务不再拖住判定。
+- 守卫只拦「下载器 + 明确落盘」的组合：按命令段识别（`sudo`/`env`/`timeout` 等包装、
+  多行脚本、绝对路径都算），支持 `curl -o`/`-O`/`-OJ`、`wget` 默认写出、
+  `Invoke-WebRequest`/`iwr -OutFile`、`aria2c`、`Start-BitsTransfer`、`bitsadmin`、
+  `certutil -urlcache`、重定向落盘与大文件后缀 URL；`2>/dev/null`、`curl -I`、
+  `grep aria2c` 这类只读/无关写法，以及 `git clone`、`npm install`、只读查 API 一律放行。
 
 ## 测试与自检
 

@@ -31,7 +31,7 @@ body:
     attributes:
       label: 版本
       description: 插件版本、DSH 版本、Node 版本、Motrix 与 @motrix/cli 版本
-      placeholder: dsh-motrix 0.0.1 / DSH x.y.z / Node 22.19.0 / Motrix 1.8.19
+      placeholder: dsh-motrix 0.0.3 / DSH x.y.z / Node 22.19.0 / Motrix 1.8.19
     validations:
       required: true
   - type: input

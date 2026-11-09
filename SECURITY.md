@@ -15,11 +15,12 @@ argv、是否会泄漏桥接 token），以及你建议的修复方向。确认�
 
 ## 本插件涉及的边界
 
-- **下载守卫**只拦 shell 工具里「下载器 + 明确落盘」的窄组合（`curl -o`、`wget -O`、
-  `aria2c`、`Invoke-WebRequest -OutFile`、`Start-BitsTransfer`、重定向落盘、大文件后缀
-  URL），用途是把模型引导到 `motrix` 工具，**不是安全沙箱**。
+- **下载守卫**按命令段识别 shell 工具里的「下载器 + 明确落盘」组合（`curl`/`wget`/
+  `aria2c`/`Invoke-WebRequest`/`iwr`/`Start-BitsTransfer`/`bitsadmin`/`certutil -urlcache`，
+  含 `sudo`/`env`/`timeout` 等包装、多行脚本与绝对路径），用途是把模型引导到 `motrix`
+  工具，**不是安全沙箱**；`eval`/变量间接调用、带值包装（`sudo -u root curl`）等仍未覆盖。
 - **命令行注入**：所有拼进 `motrix` argv 的调用方取值都做过校验（禁止以 `-` 开头等），
   代理 URL 走协议白名单；子进程不经过 shell。
 - **凭据**：桥接 token 只通过环境变量与 HTTP 头传给子进程/桥接，不打印到日志或工具输出。
-- **删除保护**：`action=manage` 的 `remove` 在 `deleteFiles: true` 时会核对文件是否仍是
-  当初那次下载产生的，不符就只删任务记录。
+- **删除保护**：`action=manage` 的 `remove` 在 `deleteFiles: true` 时会核对文件（存在、普通文件、
+  非符号链接、大小相符）；不符或无法核对时只删任务记录，不触碰磁盘。

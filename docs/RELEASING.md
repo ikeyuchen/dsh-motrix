@@ -2,7 +2,7 @@
 
 ## 版本策略（0.0.x 起步）
 
-对外首发定为 **0.0.1**：工具名、参数、枚举值都是模型与用户看到的契约，还会变。
+对外首发定为 **0.0.1**（2026-11-08 已发布）：工具名、参数、枚举值都是模型与用户看到的契约，还会变。
 版本号只沿 `0.0.x` 递增（0.0.1 → 0.0.2 → …），**不使用 0.x.0 minor 位**。
 
 | 变更 | 版本位 | 例子 |
@@ -30,12 +30,13 @@ npm pack --dry-run  # 看最终会进包的文件
 ```
 
 人工项（机器判不了）：新参数在 `README.md` 的配置表里有位置；`AGENTS.md` 的硬规则没与现状矛盾；
-从 npm 装一次冒烟（插件页输入 `dsh-motrix` 或 `dsh plugin add dsh-motrix`）；首发确认 npm 上
-`dsh-motrix` 未被占用（2026-11-08 查过：0 个同名包与近义变体）。
+从 npm 装一次冒烟（插件页输入 `dsh-motrix` 或 `dsh plugin add dsh-motrix`）；确认目标版本尚未
+发布（`npm view dsh-motrix@<version>` 返回 404）。
 
-## 首次发布到 GitHub
+## 首次发布到 GitHub（已完成）
 
-仓库地址是 `https://github.com/ikeyuchen/dsh-motrix`（public）。空仓库建好后，本地补远端并推送：
+仓库已建立并推送到 `https://github.com/ikeyuchen/dsh-motrix`（public，2026-11-08）；下面是留档的
+初始化步骤，换机器或重建仓库时照做。远端已在本地配置好，日常只需 `git push`。
 
 ```bash
 git remote add origin https://github.com/ikeyuchen/dsh-motrix.git
@@ -53,20 +54,19 @@ git push -u origin main
   （windows / ubuntu × Node 22，ubuntu × Node 24；单人仓库也建议开，防止本地漏跑测试就推送）
 
 `release.yml` 在 tag 推送后自动建 GitHub Release（标题为 tag，正文是提交摘要）。想用 CHANGELOG
-正文覆盖，发布后执行：`gh release edit v0.0.1 --notes-file <摘出的 CHANGELOG 小节>`。
+正文覆盖，发布后执行：`gh release edit v0.0.3 --notes-file <摘出的 CHANGELOG 小节>`。
 
 ## 发布
 
-首次发布先完成上一节的推送，确保 `origin/main` 存在，否则下面的 `git reset --soft origin/main`
-会失败。
+日常发布前确保本地 `main` 与 `origin/main` 同步（首次推送已完成），再合成本地未推送的提交：
 
 ```bash
 # 1) 写 CHANGELOG：当前版本 + 日期，只写用户可见的新增 / 优化 / 修复
 # 2) 合成本地未推送的提交（一次推送只推一个提交）
 git reset --soft origin/main
-git add -A && git commit -m "chore(release): v0.0.1"
+git add -A && git commit -m "chore(release): v0.0.3"
 # 3) 打 tag 推送
-git tag v0.0.1
+git tag v0.0.3
 git push origin main --tags
 ```
 
@@ -74,9 +74,9 @@ git push origin main --tags
 （去掉 `v`）等于 `package.json.version` → `npm publish --access public --provenance` →
 建 GitHub Release。
 
-一次性配置：仓库 Settings → Secrets and variables → Actions 添加 `NPM_TOKEN`
-（npm 网站 → Access Tokens → Granular，权限 `read-write`，仅限本包）。`--provenance` 要求
-workflow 有 `id-token: write` 权限（已在 `release.yml` 声明）。
+一次性配置（本仓库已配置，2026-11-08）：仓库 Settings → Secrets and variables → Actions 添加
+`NPM_TOKEN`（npm 网站 → Access Tokens → Granular，权限 `read-write`，仅限本包）。`--provenance`
+要求 workflow 有 `id-token: write` 权限（已在 `release.yml` 声明）。
 
 本地手动发布（CI 不可用时）：`npm login` 后 `npm publish --access public --otp=<6 位码>`。
 
