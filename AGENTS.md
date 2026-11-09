@@ -9,6 +9,7 @@ npm test              # 离线契约测试 + 发布边界测试（tarball 内容
 npm run test:pack     # 只跑发布边界：npm pack 后检查该有的都在、开发期文件没进包
 npm run tokens        # 模型可见 token 报表（改工具描述/参数说明前后必跑）
 npm run release:check # 发布前静态检查（版本一致/预算/清单/patch/文案），发版前必跑
+npm publish --dry-run --tag beta # 预览 beta 发布物（版本号须含 -）
 npm run selftest      # 集成自测：需本机 Motrix 与 @motrix/cli 在跑，会真实下载到临时目录
 npm pack --dry-run    # 看最终会进包的文件
 ```
@@ -55,6 +56,24 @@ npm pack --dry-run    # 看最终会进包的文件
 
 **变更写进 CHANGELOG**：只写用户能感知的变化，分区固定 `新增功能 / 体验优化 / 问题修复 / 其他变更`。
 
+## 版本与发布
+
+- 版本只沿 `0.0.x` 递增，**不使用 0.x.0 minor 位**；beta 用 `0.0.x-beta.N`（如 `0.0.4-beta.0`）。
+- beta：`npm version prerelease --preid beta --no-git-tag-version` → 同步 README/CHANGELOG → 推 tag
+  `v0.0.x-beta.N`；`release.yml` 自动发 `beta` dist-tag，**`latest` 保持稳定版**。用户装 `dsh-motrix@beta`。
+- 稳定：不带 `-` 的 patch 版本，CI 发 `latest`。**发布只走 tag/CI**，本地手发只在 CI 不可用时兜底。
+- 文档改动也要发版才会上 npm 页面（README 来自已发布 tarball）；README/CHANGELOG 的版本声明由
+  `release:check` 校验，不同步会拦。
+
+## 发版验收（本机，必做）
+
+- 发完后用 **npm 源** 装到本机 profile 验收：`dsh plugin add dsh-motrix@beta`（稳定版用版本号）；
+  **不允许用 `link:` 源代表用户安装**。
+- 验收项：`list_bundles` 的 source 是 npm spec、`node_modules/dsh-motrix` 是真实目录且版本一致；
+  真实 Motrix 跑一次 `action=tasks`、一次小文件 `action=download`（sha256）、一次 `manage remove deleteFiles`、
+  一条守卫拦截。
+- GitHub 文档已更新但 npm 页面未跟属于预期；要同步就补一个 beta/patch 发版。
+
 ## 改完的自检顺序
 
 1. `npm test` —— 契约 + 发布边界（一次跑完）
@@ -62,3 +81,4 @@ npm pack --dry-run    # 看最终会进包的文件
 3. 若动了工具签名或文案：`npm run tokens` 看数字，同步 README / CHANGELOG，并确认 `release:check` 预算通过
 4. 若动了发布相关文件：`npm pack --dry-run` 核对清单
 5. 准备发布：按 `docs/RELEASING.md` 走完整流程
+6. 发版后：按「发版验收」从 npm 装 beta/稳定版跑真实 Motrix，再宣布完成

@@ -27,6 +27,7 @@ git tag v0.0.4-beta.0 && git push origin main --tags
 `release.yml` 检测到版本号含 `-` 会自动 `npm publish --tag beta`，**`latest` 保持稳定版不动**；
 安装 beta 用 `dsh plugin add dsh-motrix@beta`（或 npm `npm i dsh-motrix@beta`）。转正时发不带 `-`
 的稳定版，CI 会把它发回 `latest`；`npm dist-tag ls dsh-motrix` 可核对两个 tag 各指向哪版。
+发完按 `AGENTS.md` 的「发版验收」用 npm 源装到本机、真实跑一遍再宣布完成。
 
 ## 发布前检查
 
