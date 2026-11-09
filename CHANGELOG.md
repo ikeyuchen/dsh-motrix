@@ -2,6 +2,31 @@
 
 版本号只在准备发布时递增；只记用户可见的改动，实现细节见 `docs/`。
 
+## 0.0.3（2026-11-09）
+
+### 问题修复
+
+- 下载守卫：不再因为命令里出现 `aria2c` 字样就误拦（如 `grep aria2c`、`git commit -m '… aria2c …'`）；
+  `2>/dev/null` / `2>$null`、`curl -I` 等只读写法放行。
+- 下载守卫：补上 `sudo` / `env` / `command` / `timeout` / `xargs` 包装、多行脚本、绝对路径、
+  `-OJ` / `-ofoo` 等写法的识别；`wget` 默认落盘与 `iwr` / `bitsadmin` / `certutil -urlcache`
+  纳入下载器；当前环境里的 `ops_bash` 工具名也受守卫覆盖。
+- 等待循环：单次 `list` 失败不再把整次下载判失败（保留上次快照，连续 3 次才优雅收尾）；
+  `motrix watch` 子进程在所有退出路径上都会被关闭。
+- 多 URL 下载：某个源失败不再吃掉其余 URL，已建任务与失败源都会在结果里说明。
+- 删除保护：`finalPath` 是符号链接、目录或大小未知时，`remove --delete-files` 只删任务记录，
+  不再递归删目录或顺链接删外部文件。
+- 配置校验：`downloadToolTimeoutMs` 必须至少比 `defaultWaitTimeoutMs` 大 30s，避免等待预算
+  被静默压到 5s。
+- 运行时：卸载期间不再可能 spawn 孤儿 `watch`；桥接请求受调用方取消控制；静默拉起失败会
+  正确回退 `motrix open`；watch 的 stderr 被消费，不再因管道写满而静默失效；CLI 输出截断与
+  JSON 解析更稳。
+- 自检脚本：清理临时目录与全部测试任务，失败路径同样执行清理。
+
+### 其他变更
+
+- 版本策略统一为 `0.0.x`（不再使用 `0.x.0` minor 位），同步 README 与 `docs/RELEASING.md`。
+
 ## 0.0.2（2026-11-09）
 
 ### 体验优化
