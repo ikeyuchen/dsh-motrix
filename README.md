@@ -154,14 +154,14 @@ scripts/           token 报表、发布自检、集成自测
 
 ## 版本与发布
 
-当前 **0.0.4-beta.1**（beta 预览；稳定版 0.0.3）。模型可见契约仍会变，版本按 `0.0.x` 递增
+当前 **0.0.4-beta.2**（beta 预览；稳定版 0.0.3）。模型可见契约仍会变，版本按 `0.0.x` 递增
 （工具名/参数/枚举调整同样进 `0.0.x`，不使用 minor 位）。beta 用 `dsh plugin add dsh-motrix@beta`
 安装，`latest` 不会被改动。发布流程见 `docs/RELEASING.md`：
 
 ```bash
 npm run release:check
 npm version prerelease --preid beta --no-git-tag-version   # 稳定版用 patch
-git tag v0.0.4-beta.1 && git push origin main --tags   # release.yml 自动 npm publish
+git tag v0.0.4-beta.2 && git push origin main --tags   # release.yml 自动 npm publish
 ```
 
 ## 参与贡献
