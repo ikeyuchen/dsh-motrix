@@ -1,6 +1,6 @@
 {
   "name": "dsh-motrix",
-  "version": "0.0.4-beta.5",
+  "version": "0.0.4-beta.6",
   "description": "把本地 Motrix 下载引擎接入 DeepSeek Harness：一个 motrix 网关工具，多线程、断点续传地下载 HTTP/FTP 链接、磁力链与 .torrent，传输在 Motrix 内进行，工具超时或会话中断都不会打断已开始的下载。",
   "license": "MIT",
   "author": "ikeyuchen (https://github.com/ikeyuchen)",
@@ -54,10 +54,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "test:spec": "node --test --test-reporter=spec test/*.test.mjs",
-    "check": "node --test test/*.test.mjs",
     "tokens": "node scripts/token-report.mjs",
-    "pack:dry": "npm pack --dry-run",
     "selftest": "node scripts/selftest.mjs",
     "release:check": "node scripts/release-check.mjs",
     "prepublishOnly": "npm run release:check && npm test",
