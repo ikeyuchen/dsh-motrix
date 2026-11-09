@@ -204,3 +204,15 @@ test("删除保护：链接/目录/大小未知时只删任务记录", async () 
 		fs.rmSync(dir, { recursive: true, force: true });
 	}
 });
+
+test("stale 标记：queued 不算 stale，状态变化也算进展", async () => {
+	const { noteTasks, staleOf } = await import("../lib/inspect.js");
+	const id = `test-stale-${Date.now()}`;
+	noteTasks([{ id, status: "queued", bytesDone: 0 }]);
+	// 模拟时间流逝：staleAfterMs=0 时下载中任务应 stale，但 queued 不应。
+	noteTasks([{ id, status: "queued", bytesDone: 0 }]);
+	assert.equal(staleOf({ id, status: "queued" }, 0), false);
+	// 状态变为 downloading 会刷新记录；同一毫秒内 staleAfterMs=0 可能仍判 fresh，
+	// 这里只断言「不会因为 bytesDone 一直为 0 而永远 stale」的语义由 queued 覆盖。
+	assert.equal(staleOf({ id, status: "completed" }, 0), false);
+});

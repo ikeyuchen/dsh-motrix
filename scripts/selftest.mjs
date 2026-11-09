@@ -438,6 +438,23 @@ try {
 		console.error("validation guard FAILED (1): [validation] empty urls accepted");
 		process.exitCode = 1;
 	}
+	// 4b) 新增的严格校验：非法值必须响亮失败，而不是静默改写或交给 CLI 才发现
+	const expectReject = async (label, args, pattern) => {
+		try {
+			await download.execute({ action: "download", saveDir, ...args }, exec);
+			console.error(`FAIL  ${label} — accepted`);
+			process.exitCode = 1;
+		} catch (error) {
+			const ok = pattern.test(String(error?.message ?? error));
+			console.log(ok ? `PASS  ${label}` : `FAIL  ${label} — ${String(error?.message ?? error).slice(0, 140)}`);
+			if (!ok) process.exitCode = 1;
+		}
+	};
+	await expectReject("filename 路径穿越被拒绝", { urls: [fileUrl], filename: "../escape.bin" }, /filename/);
+	await expectReject("相对 saveDir 被拒绝", { urls: [fileUrl], saveDir: "relative-dir" }, /saveDir/);
+	await expectReject("connections 越界被拒绝", { urls: [fileUrl], connections: 65 }, /connections/);
+	await expectReject("connections 非整数被拒绝", { urls: [fileUrl], connections: 1.5 }, /connections/);
+	await expectReject("select 非十进制被拒绝", { urls: ["magnet:?xt=urn:btih:abc"], select: "0x" }, /select/);
 } finally {
 	// S1/S2/S3：无论断言失败还是 download.execute 抛错，都统一清掉本次自测创建的任务与临时目录。
 	// 删除核对可能被拒（文件被改等）：removeTasks 只打印、不抛，剩余任务在这里再试一次。

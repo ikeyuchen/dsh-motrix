@@ -68,6 +68,15 @@ test("tarball 不包含开发期文件", () => {
 	}
 });
 
+test("tarball 只包含白名单内的文件", () => {
+	// 黑名单只能拦住已知的开发期文件；新加根目录文件若被误写进 files 白名单，
+	// 这里用「子集」断言兜底（体积上限离得远，拦不住小文件）。
+	const allowed = new Set(REQUIRED);
+	for (const rel of tarball().files.map((f) => f.path)) {
+		assert.ok(allowed.has(rel), `tarball 出现了白名单之外的文件：${rel}`);
+	}
+});
+
 test("package.json files 白名单每项都在 tarball 里", () => {
 	const files = tarball().files.map((f) => f.path);
 	for (const pattern of pkg.files) {

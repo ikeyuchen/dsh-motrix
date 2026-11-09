@@ -66,10 +66,16 @@ for (const lang of ["zh", "en"]) {
 	check(`locale/${lang}.json 有 meta.title/description`, Boolean(meta2?.title && meta2?.description));
 }
 
-// 5) CHANGELOG 最新小节版本 = package.json 版本
+// 5) CHANGELOG 最新小节版本 = package.json 版本（支持 0.0.4-beta.0 这类 prerelease）
 const changelog = read("CHANGELOG.md");
-const m = changelog.match(/^##\s+([0-9]+\.[0-9]+\.[0-9]+)/m);
+const versionPattern = "([0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.]+)?)";
+const m = changelog.match(new RegExp(`^##\\s+${versionPattern}`, "m"));
 check("CHANGELOG 最新版本与 package.json 一致", m?.[1] === pkg.version, m ? `${m[1]} vs ${pkg.version}` : "未找到版本标题");
+
+// 5b) README 的「当前 **x.y.z**」也要跟着版本走（此前只查 CHANGELOG，README 会滞留旧版本）
+const readme = read("README.md");
+const rm = readme.match(new RegExp(`当前 \\*\\*${versionPattern}\\*\\*`));
+check("README 版本声明与 package.json 一致", rm?.[1] === pkg.version, rm?.[1] ? `${rm[1]} vs ${pkg.version}` : "未找到「当前 **x.y.z**」");
 
 // 6) token 预算
 const report = await measure(ROOT);
