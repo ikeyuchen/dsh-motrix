@@ -146,7 +146,7 @@ README.md / CHANGELOG.md / LICENSE
 
 ## 版本
 
-当前 **0.0.4-beta.6**（beta 预览；稳定版 0.0.3）。beta 用 `dsh plugin add dsh-motrix@beta` 安装；
+当前 **0.0.4-beta.7**（beta 预览；稳定版 0.0.3）。beta 用 `dsh plugin add dsh-motrix@beta` 安装；
 版本规则与发布流程见 `docs/RELEASING.md`。
 
 ## 开源协议

@@ -2,6 +2,21 @@
 
 版本号只在准备发布时递增；只记用户可见的改动，日期按 UTC。
 
+## 0.0.4-beta.7（2026-11-10）
+
+### 问题修复
+
+- 下载守卫改为只拦「下载器 + 确实落盘 + 大文件后缀证据」：此前只要出现 `-o`/`-O`/`-OutFile`
+  等写盘参数就拦截，`curl -o small.json`、`curl -o /dev/null` 探活、`Invoke-WebRequest
+  -OutFile small.json` 这类小文件下载会被误拦并产生大量报错。现在小文件与尺寸未知一律放行，
+  证据只认下载 URL 与输出文件名的后缀（`guardLargeExtensions`），`-e`/`--referer`/`--data`
+  等参数里的 URL 不算；stdout、管道、`curl -I`/`-X HEAD`、`wget --spider`、`aria2c --dry-run`
+  也不算落盘。
+- 下载守卫补齐判定：内联 shell 后跟 `2>/dev/null` 等重定向（`bash -c '…' 2>/dev/null`）、
+  `wget -c` 续传、`wget --output-document=-`、PowerShell 表达式目标（`-OutFile (Join-Path …)`）、
+  `Start-BitsTransfer -Dest`、`bitsadmin`/`certutil` 末位目标、`aria2c --dry-run=false`、
+  `bash -lc` 与 `wsl bash -c` 包装。
+
 ## 0.0.4-beta.6（2026-11-09）
 
 ### 其他变更
