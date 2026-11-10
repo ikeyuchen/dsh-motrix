@@ -375,6 +375,14 @@ try {
 			ask("pwsh", { command: "Invoke-WebRequest -Uri https://example.com/x.msi -OutFile x.msi" })?.kind === "deny"
 		);
 		check("守卫：curl 查 API 放行", ask("bash", { command: "curl https://api.example.com/status" }) === null);
+		check(
+			"守卫：小文件 curl -o 放行（此前出现 -o 就误拦）",
+			ask("bash", { command: "curl -o small.json https://api.example.com/v1/small.json" }) === null
+		);
+		check(
+			"守卫：curl -o /dev/null 放行（只探活不落盘）",
+			ask("bash", { command: "curl -o /dev/null -w '%{http_code}' https://example.com/" }) === null
+		);
 		check("守卫：curl.exe 查 API 放行（.exe 不是大文件后缀）", ask("pwsh", { command: "curl.exe -s https://example.com/ | Select-Object -First 2" }) === null);
 		check("守卫：非 shell 工具放行", decideGuard({ name: "read_file", arguments: { path: "x.iso" } }, state) === null);
 		const allowState = createGuardState({ guardEnabled: true, guardAllowPatterns: ["example\\.com/x\\.iso"], guardLargeExtensions: undefined });

@@ -15,10 +15,13 @@ token）与建议的修复方向；确认后给出修复计划。
 
 ## 本插件涉及的边界
 
-- **下载守卫**按命令段识别 shell 工具里的「下载器 + 明确落盘」组合（`curl`/`wget`/
+- **下载守卫**按命令段识别 shell 工具里的「下载器 + 明确落盘 + 大文件证据」组合（`curl`/`wget`/
   `aria2c`/`Invoke-WebRequest`/`iwr`/`Start-BitsTransfer`/`bitsadmin`/`certutil -urlcache`，
-  含 `sudo`/`env`/`timeout` 等包装、多行脚本与绝对路径），用途是把模型引导到 `motrix`
-  工具，**不是安全沙箱**；`eval`/变量间接调用、带值包装（`sudo -u root curl`）等仍未覆盖。
+  含不带值包装前缀（`sudo curl` / `env FOO=1 curl` / `timeout 60 curl`）、多行脚本与绝对路径）；
+  大文件证据指下载 URL 或显式输出文件名（含 `-OutFile (Join-Path …)` 这类 PowerShell 表达式）
+  命中 `guardLargeExtensions`，小文件与尺寸未知的下载放行。用途是把模型引导到 `motrix`
+  工具，**不是安全沙箱**；带值包装（`sudo -u root curl`、`timeout -s KILL 60 curl`）、
+  `find -exec`、变量/命令替换（`out="$(curl …)"`）等仍未覆盖。
 - **命令行注入**：所有拼进 `motrix` argv 的调用方取值都做过校验（禁止以 `-` 开头等），
   代理 URL 走协议白名单；子进程不经过 shell。
 - **凭据**：桥接 token 只通过环境变量与 HTTP 头传给子进程/桥接，不打印到日志或工具输出。

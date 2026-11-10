@@ -12,7 +12,8 @@
 打断已开始的下载。
 
 一个模型可见的网关工具 `motrix`（`action = download | tasks | manage`），配套一条系统提示与
-内置下载守卫。守卫拦截 shell 中的下载器落盘命令，没有工具与提示段，常驻 token 为 0。
+内置下载守卫。守卫只拦 shell 里下载器下载大文件（URL 或输出文件名命中大文件后缀），小文件
+直接放行；没有工具与提示段，常驻 token 为 0。
 
 | action | 用途 |
 | --- | --- |
@@ -98,9 +99,9 @@
 | `useWatch` | `true` | 用 `motrix watch --json` 事件流降低轮询 |
 | `watchPollMs` | `5000` | watch 存活时的安全轮询间隔 |
 | `idempotent` | `true` | 派生幂等键，重试不建重复任务 |
-| `guardEnabled` | `true` | 拦截 shell 下载器落盘命令，引导到 `motrix` |
+| `guardEnabled` | `true` | 拦截 shell 下载器下载大文件，引导到 `motrix` |
 | `guardAllowPatterns` | `[]` | 守卫放行正则 |
-| `guardLargeExtensions` | 内置 15 项 | 守卫认定的「大文件」URL 后缀 |
+| `guardLargeExtensions` | 内置 15 项 | 守卫认定的「大文件」URL/输出文件名后缀 |
 | `endpoint` | 空 | 远端 Motrix server 地址 |
 | `token` | 空 | 桥接 token（`MOTRIX_BRIDGE_TOKEN`） |
 
@@ -111,7 +112,9 @@
 - `remove` 前核对文件（存在、普通文件、非符号链接、大小相符），不符时只删任务记录并给出
   `keptReason`。
 - 停滞检测在下载任务长时间无字节增长时提前返回；`fetching_metadata` 与排队任务不参与判定。
-- 守卫拦截「下载器 + 落盘证据」；覆盖范围与未覆盖项见
+- 守卫只拦「下载器 + 真正落盘 + 大文件后缀证据」（`guardLargeExtensions`）：证据取自下载 URL 的
+  文件名与显式输出文件名，`-e/--referer` 等参数里的 URL 不算。小文件、尺寸未知、`-o /dev/null`、
+  stdout 与管道的下载直接放行。覆盖范围与未覆盖项见
   [SECURITY.md](https://github.com/ikeyuchen/dsh-motrix/blob/main/SECURITY.md)。
 
 ## 仓库结构

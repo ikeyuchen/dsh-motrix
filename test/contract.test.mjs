@@ -106,29 +106,43 @@ test("bundle 声明与包名一致", () => {
 	assert.ok(patch.includes(`name: '${pkg.name}'`));
 });
 
-test("内置下载守卫：拦截下载器落盘、放行只读命令", () => {
+test("内置下载守卫：只拦大文件下载，放行只读与小文件命令", () => {
 	const state = createGuardState({ guardEnabled: true, guardAllowPatterns: [], guardLargeExtensions: undefined });
 	const ask = (name, args) => decideGuard({ name, arguments: args }, state);
+	// 大文件（URL / 输出文件名命中后缀）照旧拦截。
 	assert.equal(ask("bash", { command: "curl -o x.iso https://example.com/x.iso" })?.kind, "deny");
 	assert.equal(ask("bash", { command: "wget -O out.zip https://example.com/a.zip" })?.kind, "deny");
 	assert.equal(ask("pwsh", { command: "Invoke-WebRequest -Uri https://example.com/x.msi -OutFile x.msi" })?.kind, "deny");
+	// 小文件下载（此前只要出现 -o / -OutFile 就一律误拦）。
+	assert.equal(ask("bash", { command: "curl -o small.json https://api.example.com/v1/small.json" }), null);
+	assert.equal(ask("pwsh", { command: "Invoke-WebRequest -Uri https://example.com/x.json -OutFile small.json" }), null);
+	// 不落盘：stdout、/dev/null、只取头。
+	assert.equal(ask("bash", { command: "curl -o /dev/null -w '%{http_code}' https://example.com/x.iso" }), null);
 	assert.equal(ask("bash", { command: "curl https://api.example.com/status" }), null);
 	assert.equal(ask("read_file", { path: "x.iso" }), null);
 	const off = createGuardState({ guardEnabled: false, guardAllowPatterns: [], guardLargeExtensions: undefined });
 	assert.equal(decideGuard({ name: "bash", arguments: { command: "curl -o x.iso https://e/x.iso" } }, off), null);
+	// 清空后缀列表 = 关闭大文件判定（全部放行）。
+	const noExtensions = createGuardState({ guardEnabled: true, guardAllowPatterns: [], guardLargeExtensions: [] });
+	assert.equal(decideGuard({ name: "bash", arguments: { command: "curl -o x.iso https://e/x.iso" } }, noExtensions), null);
 });
 
-test("下载守卫：误拦/漏拦回归", () => {
+test("下载守卫：大文件拦截与误拦/漏拦回归", () => {
 	const state = createGuardState({ guardEnabled: true, guardAllowPatterns: [], guardLargeExtensions: undefined });
 	const kind = (name, command) => decideGuard({ name, arguments: { command } }, state)?.kind ?? "allow";
-	// 必须拦截（此前漏拦的写法）
+	// 必须拦截：确实落盘 + 大文件后缀证据
 	for (const command of [
 		"curl -o x.zip https://e.com/x.zip",
 		"curl -O https://e.com/x.zip",
-		"curl -OJ https://e.com/download?id=1",
+		"curl -OJ https://e.com/download/x.zip?id=1",
 		"curl -sLO https://e.com/x.zip",
-		"wget -q https://e.com/bigfile",
-		"wget -Ofoo https://e.com/x.zip",
+		"curl --output x.iso https://e.com/d?id=1",
+		"curl -o report https://e.com/a.mp4",
+		"curl https://e.com/x.iso > x.iso",
+		"wget -q https://e.com/bigfile.iso",
+		"wget -c https://e.com/x.iso",
+		"wget -Ofoo.zip https://e.com/x",
+		"wget -O out.zip https://e.com/a.zip",
 		"sudo curl -o x.zip https://e.com/x.zip",
 		"env FOO=1 curl -o x.zip https://e.com/x.zip",
 		"timeout 60 curl -o x.zip https://e.com/x.zip",
@@ -136,14 +150,34 @@ test("下载守卫：误拦/漏拦回归", () => {
 		"cd /tmp\ncurl -o x.zip https://e.com/x.zip",
 		"/usr/bin/curl -o x.zip https://e.com/x.zip",
 		"./curl -o x.zip https://e.com/x.zip",
+		"bash -c 'curl -o x.zip https://e.com/x.zip'",
 		"iwr https://e.com/x.msi -OutFile x.msi",
+		"Invoke-WebRequest -Uri https://e.com/x.iso -OutFile x",
 		"bitsadmin /transfer j https://e.com/x.zip C:\\tmp\\x.zip",
 		"certutil -urlcache -split -f https://e.com/x.exe x.exe",
-		"aria2c https://e.com/x.iso"
+		"aria2c https://e.com/x.iso",
+		"aria2c -o x.iso https://e.com/d?id=1",
+		"curl --output=x.zip https://e.com/x",
+		"curl -o x.zip \"$URL\"",
+		"wget --output-document=x.iso https://e.com/x",
+		"curl -o 'data(beta).zip' https://e.com/x",
+		"curl -d '{\"a\":\"b\"}' -o x.zip https://e.com/d",
+		"bash -lc 'curl -o x.zip https://e.com/x.zip'",
+		"wsl bash -c 'curl -o x.zip https://e.com/x.zip'",
+		"Start-BitsTransfer -Source https://e.com/d?id=1 -Destination C:\\tmp\\x.zip",
+		"Start-BitsTransfer -Source https://e.com/d?id=1 -Dest x.zip",
+		"bitsadmin /transfer j /download /priority high https://e.com/d?id=1 C:\\tmp\\x.zip",
+		"certutil -urlcache -f https://e.com/d?id=1 x.exe",
+		"bash -c 'curl -o x.zip https://e.com/x.zip' 2>/dev/null",
+		"bash -c 'curl -o x.zip https://e.com/x.zip' >/dev/null 2>&1",
+		"cmd /c \"curl -o x.zip https://e.com/x.zip\" 2>NUL",
+		"iwr https://e.com/d?id=1 -OutFile (Join-Path $env:TEMP 'x.zip')",
+		"Invoke-WebRequest -Uri https://e.com/d?id=1 -OutFile ($dir + '\\x.iso')",
+		"aria2c --dry-run=false https://e.com/x.iso"
 	]) {
 		assert.equal(kind("bash", command), "deny", `应拦截: ${command}`);
 	}
-	// 必须放行（此前误拦的写法）
+	// 必须放行（此前误拦的写法）：小文件、尺寸未知、stdout/管道/只取头
 	for (const command of [
 		"grep -rn aria2c .",
 		"git commit -m 'fix: aria2c cleanup'",
@@ -153,12 +187,41 @@ test("下载守卫：误拦/漏拦回归", () => {
 		"curl https://e.com/a.zip | tar xz",
 		"git clone https://e.com/x.git",
 		"npm install",
-		"echo hello"
+		"echo hello",
+		"curl -o small.json https://api.e.com/v1/small.json",
+		"curl -sSL -o install.sh https://get.e.com/install.sh",
+		"curl -o /dev/null -w '%{http_code}' https://e.com/probe",
+		"curl -o - https://e.com/x.iso",
+		"curl -o NUL https://e.com/x.iso",
+		"curl https://e.com/x.iso",
+		"curl -OJ https://e.com/download?id=1",
+		"wget -q https://e.com/file",
+		"wget -qO- https://e.com/a.zip | tar xz",
+		"wget --spider https://e.com/x.iso",
+		"iwr https://e.com/x.iso",
+		"aria2c https://e.com/small.txt",
+		"curl -fsSL https://get.e.com/install.sh | sh",
+		"curl -o 'small file.json' https://api.e.com/x",
+		"wget -O - https://e.com/x.iso -o log.txt",
+		"iwr https://e.com/x.zip -OutFile $null",
+		"curl -o small.json \"https://e.com/x.iso/child.json\"",
+		"curl -o small.json \"https://e.com/b.json?a=1#x.iso\"",
+		"curl -o small.json \"https://api.e.com/export?filename=backup.zip\"",
+		"curl -sL https://e.com/x.zip -o /dev/null",
+		"wget --output-document=- https://e.com/x.zip",
+		"wget -O /dev/null https://e.com/x.zip",
+		"aria2c --dry-run=true https://e.com/x.iso",
+		"aria2c -S https://e.com/x.iso",
+		"curl -o small.json -e https://e.com/a.zip https://api.e.com/x",
+		"curl -o small.json --referer \"https://e.com/x.iso\" https://api.e.com/status",
+		"curl -X HEAD -o small.json https://e.com/x.zip",
+		"curl -e https://e.com/a.zip https://api.e.com/status"
 	]) {
 		assert.equal(kind("bash", command), "allow", `应放行: ${command}`);
 	}
 	// 当前 profile 的 bash 入口是 ops_bash，同样要覆盖
 	assert.equal(kind("ops_bash", "curl -o x.zip https://e.com/x.zip"), "deny");
+	assert.equal(kind("ops_bash", "curl -o small.json https://api.e.com/small.json"), "allow");
 });
 
 test("tools/pre-execute 接线：deny 不调用 next，放行才 next", async () => {
