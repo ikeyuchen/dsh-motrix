@@ -242,6 +242,22 @@ test("tools/pre-execute 接线：deny 不调用 next，放行才 next", async ()
 	assert.deepEqual(allowed, { kind: "allow" });
 });
 
+test("后台下载：owner 取 Agent.id，rootCallId 取 exec.rootCallId", async () => {
+	const { ctx, registered } = stubCtx();
+	const specs = [];
+	ctx.get = (name) => name === "jobs" ? { start(spec) { specs.push(spec); return "motrix-test-job"; } } : undefined;
+	plugin.apply(ctx, plugin.Config({}));
+	const result = await registered.get("motrix").execute(
+		{ action: "download", urls: ["https://e.com/a.iso"], saveDir: os.tmpdir(), run_in_background: true },
+		{ callId: "call-1", rootCallId: "root-1", agent: { id: "session-1" } }
+	);
+	assert.deepEqual(result, { kind: "background", jobId: "motrix-test-job", label: `motrix download 1 URL(s) -> ${os.tmpdir()}` });
+	assert.equal(specs.length, 1);
+	assert.equal(specs[0].kind, "motrix");
+	assert.equal(specs[0].owner, "session-1");
+	assert.deepEqual(specs[0].toolCall, { callId: "call-1", rootCallId: "root-1" });
+});
+
 test("删除保护：链接/目录/大小未知时只删任务记录", async () => {
 	const { checkFileForDelete } = await import("../lib/inspect.js");
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dsh-motrix-delete-"));
