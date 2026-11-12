@@ -2,6 +2,14 @@
 
 版本号只在准备发布时递增；只记用户可见的改动，日期按 UTC。
 
+## 0.0.4-beta.9（2026-11-12）
+
+### 问题修复
+
+- 后台下载（`run_in_background`）的作业归属改用宿主实际字段：owner 取 `exec.agent.id`、
+  工具调用标识取 `exec.rootCallId`。此前读的是宿主不存在的 `exec.agent.session.id` 与
+  `exec.parentCallId`，作业会变成无主任务，进度通知与会话级取消无法按会话隔离。
+
 ## 0.0.4-beta.8（2026-11-12）
 
 ### 问题修复
