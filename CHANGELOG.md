@@ -2,6 +2,15 @@
 
 版本号只在准备发布时递增；只记用户可见的改动，日期按 UTC。
 
+## 0.0.4-beta.8（2026-11-12）
+
+### 问题修复
+
+- 适配 DSH 0.2.2-rc.2：`@deepseek-ai/schemastery` 的 peer 范围从 `~3.18.4` 放宽到
+  `>=3.18.4 <3.20.0`（新宿主自带 3.19.0，旧范围会让安装时持续出现 peer 告警），开发依赖同步到
+  `dsh-tools 0.2.2-rc.2` 与 `schemastery ~3.19.0`。插件 API（`defineTool`、`tools/pre-execute`、
+  `systemPrompt.section`）与组合包清单在新宿主上行为不变。
+
 ## 0.0.4-beta.7（2026-11-10）
 
 ### 问题修复
